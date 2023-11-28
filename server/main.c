@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <stdbool.h>
+#include <unistd.h>
 
-static const char message[] = "Hello from the server, my name is Theo Lincke and I like to eat pasta :)";
+static char message[] = "Hello from the server, my name is Theo Lincke and I like to eat pasta :)";
 
 int open_socket_impl() {
     int sockfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -23,7 +24,7 @@ struct sockaddr_in create_sockaddr_in_impl() {
     return server_addr;
 }
 
-void bind_impl(int sockfd, struct sockaddr_in *server_addr) {
+int bind_impl(int sockfd, struct sockaddr_in *server_addr) {
     int status = bind(sockfd, (struct sockaddr *) server_addr, sizeof(struct sockaddr_in));
     if (status == -1) {
         printf("Error binding\n");
@@ -34,10 +35,15 @@ void bind_impl(int sockfd, struct sockaddr_in *server_addr) {
         printf("Error listening\n");
         exit(1);
     }
+    int client = accept(sockfd, NULL, NULL);
+    if (client == -1) {
+        printf("Error accepting\n");
+        exit(1);
+    }
+    return client;
 }
 
-void write_data_impl(int sockfd, char *buffer, size_t buffer_size) {
-    int client = accept(sockfd, NULL, NULL);
+void write_data_impl(int sockfd, int client, char *buffer, size_t buffer_size) {
     printf("Sending message: %s\n", buffer);
     send(client, buffer, buffer_size, 0);
 }
@@ -46,28 +52,27 @@ void write_data_impl(int sockfd, char *buffer, size_t buffer_size) {
  * Copies msg_head to buffer (as much as possible) - until it finds
  * a null terminator - in which case it returns NULL;
  */
-int write_message_to_buffer(char *buffer, size_t buff_size, const char *msg_head) {
-    int i = 0;
-    do {
-        buffer[i] = msg_head[i];
-        i++;
-    } while (i < buff_size && msg_head[i] != '\0');
-
-    return i;
+void write_message_in_chunks(int sockfd, int client, char *buffer, size_t buff_size, char *full_message) {
+    int i;
+    char *msg_head = full_message;
+    while (true) {
+        for (i = 0; i < buff_size && *(msg_head - 1) != '\0'; ++i, msg_head++) {
+            buffer[i] = *msg_head;
+        }
+        write_data_impl(sockfd, client, buffer, i);
+        if (i != buff_size) {
+            return;
+        }
+    }
 }
 
 int main() {
     int sockfd = open_socket_impl();
     struct sockaddr_in server_addr = create_sockaddr_in_impl();
-    bind_impl(sockfd, &server_addr);
+    int client = bind_impl(sockfd, &server_addr);
 
     char buffer[20];
-    char* msg_head = message;
-    int n;
-    while((n = write_message_to_buffer(buffer, 20, msg_head)) == 20){
-        msg_head += n;
-    }
-    write_data_impl(sockfd, buffer, sizeof(buffer));
+    write_message_in_chunks(sockfd, client, buffer, sizeof(buffer), message);
 
     return 0;
 }
