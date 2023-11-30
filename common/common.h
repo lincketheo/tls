@@ -18,7 +18,7 @@ enum verbosity {
 };
 void app_exit();
 
-void register_app_app_exit(void(*on_exit)());
+void register_app_exit(void(*on_exit)());
 
 int open_stream_socket_impl();
 

@@ -20,7 +20,7 @@ void app_exit() {
     exit(1);
 }
 
-void register_app_app_exit(void(*on_exit)()) {
+void register_app_exit(void(*on_exit)()) {
     app_exit_callback = on_exit;
 }
 

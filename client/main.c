@@ -20,7 +20,7 @@ void close_impl() {
 
 
 int main() {
-    register_app_app_exit(close_impl);
+    register_app_exit(close_impl);
 
     // Create socket
     sockfd = open_stream_socket_impl();
