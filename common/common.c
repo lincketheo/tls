@@ -142,7 +142,10 @@ void send_impl_flush(int to_socket, const char *buffer, size_t len) {
     }
 }
 
-void send_in_chunks(int to_socket, size_t chunk_size, const char *full_message) {
+void send_in_chunks(
+        int to_socket,
+        size_t chunk_size,
+        const char *full_message) {
     const char *msg_head = full_message;
     while (true) {
 
@@ -177,7 +180,12 @@ size_t recv_impl(int sockfd, char *buffer, size_t buffer_size) {
     return (size_t) recvd;
 }
 
-void recv_in_chunks(int sockfd, char *buffer, size_t buffer_size) {
+void recv_in_chunks(
+        int sockfd,
+        char *buffer,
+        size_t buffer_size,
+        void (*consume_buffer)(bool end)) {
+
     char *buf_head = buffer;
     size_t requested_size = buffer_size;
     bzero(buffer, buffer_size);
@@ -185,8 +193,11 @@ void recv_in_chunks(int sockfd, char *buffer, size_t buffer_size) {
     while (true) {
         size_t recvd = recv_impl(sockfd, buf_head, requested_size);
 
+
         // Finished
         if (find_char(buf_head, recvd, '\0') != -1) {
+            // Consume data one last time
+            (*consume_buffer)(true);
             return;
         }
 
@@ -194,7 +205,11 @@ void recv_in_chunks(int sockfd, char *buffer, size_t buffer_size) {
         if (requested_size == recvd) {
             buf_head = buffer;
             requested_size = buffer_size;
-            bzero(buf_head, requested_size);
+
+            // Consume data when buffer is full
+            (*consume_buffer)(false);
+
+            bzero(buffer, buffer_size);
         } else {
             // Assumes recvd < requested_size - if not - recv_impl will throw soon
             requested_size = (requested_size - recvd);
@@ -212,6 +227,17 @@ ssize_t find_char(const char *buffer, size_t buffer_size, char c) {
     return -1;
 }
 
+size_t find_char_assert(const char *buffer, size_t buffer_size, char c) {
+    for (size_t i = 0; i < buffer_size; ++i) {
+        if (buffer[i] == c) {
+            return (ssize_t) i;
+        }
+    }
+    printf("Couldn't find char: %c\n", c);
+    app_exit(1);
+    return -1; // Unreachable
+}
+
 enum verbosity get_verbosity() {
     return v_high;
 }
@@ -227,7 +253,7 @@ void create_string(struct string *string, size_t initial_capacity) {
     array_exists_guard(string);
 
     string->head = malloc(initial_capacity + 1); // Alloc one more for null terminator
-    if(!string->head)  {
+    if (!string->head) {
         printf("Couldn't create string\n");
         app_exit(1);
     }
@@ -235,17 +261,29 @@ void create_string(struct string *string, size_t initial_capacity) {
     string->capacity = initial_capacity;
 }
 
-void delete_string(struct string *string) {
+void destroy_string(struct string *string) {
     if (string) {
         if (string->head) {
+            if (get_verbosity() > v_none) {
+                printf("Destroying string\n");
+            }
             free(string->head);
             string->head = NULL;
         }
     }
 }
 
+void reset_string(struct string *string) {
+    delete_string(string, string->size);
+}
+
 void increase_array_size(struct string *array) {
-    size_t new_capacity = array->capacity * 2;
+    size_t new_capacity;
+    if(array->capacity == 0){
+        new_capacity = 1;
+    } else {
+        new_capacity = array->capacity * 2;
+    }
 
     char *new_head = realloc(array->head, new_capacity + 1);
     if (new_head == NULL) {
@@ -256,7 +294,7 @@ void increase_array_size(struct string *array) {
     array->capacity = new_capacity;
 }
 
-void append(struct string *string, const char *elements, size_t elements_size) {
+void append_string(struct string *string, const char *elements, size_t elements_size) {
     array_exists_guard(string);
 
     size_t new_size = string->size + elements_size;
@@ -269,10 +307,10 @@ void append(struct string *string, const char *elements, size_t elements_size) {
     string->head[string->size] = '\0';
 }
 
-void delete(struct string* string, size_t num_elements) {
+void delete_string(struct string *string, size_t num_elements) {
     array_exists_guard(string);
 
-    if(string->size - num_elements < 0){
+    if (string->size - num_elements < 0) {
         printf("Trying to remove more elements than string has\n");
         app_exit(1);
     }
