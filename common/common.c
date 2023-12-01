@@ -8,20 +8,31 @@
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <strings.h>
+#include <string.h>
 
-static void (*app_exit_callback)() = NULL;
+#define MAX_CALLBACKS 10
 
-void app_exit() {
-    if (app_exit_callback != NULL) {
-        printf("Cleaning up resources\n");
-        (*app_exit_callback)();
+static int exit_callbacks_size = 0;
+
+static void (*app_exit_callbacks[MAX_CALLBACKS])() = {NULL};
+
+void app_exit(int status) {
+    for (int i = 0; i < exit_callbacks_size; ++i) {
+        if (app_exit_callbacks[i] != NULL) {
+            printf("Executing callback %d\n", i);
+            (*app_exit_callbacks[i])();
+        }
     }
     printf("Exiting\n");
-    exit(1);
+    exit(status);
 }
 
 void register_app_exit(void(*on_exit)()) {
-    app_exit_callback = on_exit;
+    if (exit_callbacks_size >= MAX_CALLBACKS) {
+        printf("Can't register any more callbacks");
+    }
+    app_exit_callbacks[exit_callbacks_size] = on_exit;
+    exit_callbacks_size++;
 }
 
 int open_stream_socket_impl() {
@@ -31,7 +42,7 @@ int open_stream_socket_impl() {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         printf("Error opening socket\n");
-        app_exit();
+        app_exit(1);
     }
     if (get_verbosity() > v_none) {
         printf("Stream socket successfully opened\n");
@@ -57,7 +68,7 @@ void bind_impl(int sockfd, struct sockaddr_in *to_address) {
     int status = bind(sockfd, (struct sockaddr *) to_address, sizeof(struct sockaddr_in));
     if (status == -1) {
         printf("Error binding\n");
-        app_exit();
+        app_exit(1);
     }
     if (get_verbosity() > v_none) {
         printf("Bind Success\n");
@@ -71,7 +82,7 @@ void listen_impl(int sockfd) {
     int status = listen(sockfd, 1);
     if (status == -1) {
         printf("Error listening\n");
-        app_exit();
+        app_exit(1);
     }
     if (get_verbosity() > v_none) {
         printf("Listen Success\n");
@@ -85,7 +96,7 @@ int accept_impl(int sockfd) {
     int client = accept(sockfd, NULL, NULL);
     if (client == -1) {
         printf("Error accepting\n");
-        app_exit();
+        app_exit(1);
     }
     if (get_verbosity() > v_none) {
         printf("Accept success\n");
@@ -94,15 +105,15 @@ int accept_impl(int sockfd) {
 }
 
 void connect_impl(int sockfd, struct sockaddr_in *server_addr) {
-    if(get_verbosity() > v_none) {
+    if (get_verbosity() > v_none) {
         printf("Connecting to server address\n");
     }
     int status = connect(sockfd, (struct sockaddr *) server_addr, sizeof(struct sockaddr_in));
     if (status == -1) {
         printf("Error connecting\n");
-        app_exit();
+        app_exit(1);
     }
-    if(get_verbosity() > v_none) {
+    if (get_verbosity() > v_none) {
         printf("Connection success\n");
     }
 }
@@ -114,7 +125,7 @@ size_t send_impl(int to_socket, const char *buffer, size_t buffer_size) {
     ssize_t sent = send(to_socket, buffer, buffer_size, 0);
     if (sent == -1) {
         printf("Error sending\n");
-        app_exit();
+        app_exit(1);
     }
     if (get_verbosity() > v_none) {
         printf("Sent %zu bytes.\n", sent);
@@ -156,7 +167,7 @@ size_t recv_impl(int sockfd, char *buffer, size_t buffer_size) {
     ssize_t recvd = recv(sockfd, buffer, buffer_size, 0);
     if (recvd == -1) {
         printf("Error receiving message\n");
-        app_exit();
+        app_exit(1);
     }
 
     if (get_verbosity() > v_none) {
@@ -203,4 +214,69 @@ ssize_t find_char(const char *buffer, size_t buffer_size, char c) {
 
 enum verbosity get_verbosity() {
     return v_high;
+}
+
+void array_exists_guard(struct string *array) {
+    if (!array) {
+        printf("Passed string is uninitialized\n");
+        app_exit(1);
+    }
+}
+
+void create_string(struct string *string, size_t initial_capacity) {
+    array_exists_guard(string);
+
+    string->head = malloc(initial_capacity + 1); // Alloc one more for null terminator
+    if(!string->head)  {
+        printf("Couldn't create string\n");
+        app_exit(1);
+    }
+    string->size = 0;
+    string->capacity = initial_capacity;
+}
+
+void delete_string(struct string *string) {
+    if (string) {
+        if (string->head) {
+            free(string->head);
+            string->head = NULL;
+        }
+    }
+}
+
+void increase_array_size(struct string *array) {
+    size_t new_capacity = array->capacity * 2;
+
+    char *new_head = realloc(array->head, new_capacity + 1);
+    if (new_head == NULL) {
+        printf("Failed to increase string size\n");
+        app_exit(1);
+    }
+    array->head = new_head;
+    array->capacity = new_capacity;
+}
+
+void append(struct string *string, const char *elements, size_t elements_size) {
+    array_exists_guard(string);
+
+    size_t new_size = string->size + elements_size;
+    while (new_size > string->capacity) {
+        increase_array_size(string);
+    }
+    memcpy(string->head + string->size, elements, elements_size);
+
+    string->size = new_size;
+    string->head[string->size] = '\0';
+}
+
+void delete(struct string* string, size_t num_elements) {
+    array_exists_guard(string);
+
+    if(string->size - num_elements < 0){
+        printf("Trying to remove more elements than string has\n");
+        app_exit(1);
+    }
+
+    string->size -= num_elements;
+    string->head[string->size] = '\0';
 }

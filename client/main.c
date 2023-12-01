@@ -9,7 +9,7 @@
 
 static int sockfd = -1;
 
-void close_impl() {
+void clean_up_sockets() {
     if (sockfd > 0) {
         if (get_verbosity() > v_none) {
             printf("Closing server socket\n");
@@ -18,9 +18,8 @@ void close_impl() {
     }
 }
 
-
 int main() {
-    register_app_exit(close_impl);
+    register_app_exit(clean_up_sockets);
 
     // Create socket
     sockfd = open_stream_socket_impl();
@@ -30,7 +29,5 @@ int main() {
 
     client_tls_exchange(&server_addr, sockfd, NULL, 0, NULL, 0);
 
-    close_impl();
-
-    return 0;
+    app_exit(0);
 }

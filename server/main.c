@@ -3,12 +3,9 @@
 #include <unistd.h>
 #include "server.h"
 
-#define SEND_CHUNK_SIZE 40
-
-static char message[] = "Hello from the server, my name is Theo Lincke and I like to eat pasta :)";
 static int sockfd = -1;
 
-void close_impl() {
+void clean_up_sockets() {
     if (sockfd > 0) {
         if (get_verbosity() > v_none) {
             printf("Closing server socket\n");
@@ -18,7 +15,7 @@ void close_impl() {
 }
 
 int main() {
-    register_app_exit(close_impl);
+    register_app_exit(clean_up_sockets);
 
     // Create socket and bind / listen
     sockfd = open_stream_socket_impl();
@@ -28,7 +25,6 @@ int main() {
 
     server_tls_exchange(sockfd, NULL, 0, NULL, 0);
 
-    close_impl();
-
+    app_exit(0);
     return 0;
 }

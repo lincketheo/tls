@@ -16,7 +16,8 @@ enum verbosity {
     v_medium = 1,
     v_high = 2
 };
-void app_exit();
+
+void app_exit(int status);
 
 void register_app_exit(void(*on_exit)());
 
@@ -36,14 +37,38 @@ size_t send_impl(int to_socket, const char *buffer, size_t buffer_size);
 
 void send_impl_flush(int to_socket, const char *buffer, size_t len);
 
-void send_in_chunks(int to_socket, size_t chunk_size, const char *full_message);
+void send_in_chunks(
+        int to_socket,
+        size_t chunk_size,
+        const char *full_message,
+        bool (*consume)(const char *, size_t index));
 
 size_t recv_impl(int sockfd, char *buffer, size_t buffer_size);
 
-void recv_in_chunks(int sockfd, char *buffer, size_t buffer_size);
+void recv_in_chunks(
+        int sockfd,
+        char *buffer,
+        size_t buffer_size,
+        bool (*consume)(const char *, size_t index));
 
 ssize_t find_char(const char *buffer, size_t buffer_size, char c);
 
 enum verbosity get_verbosity();
+
+struct string {
+    char *head;
+    size_t size;
+    size_t capacity;
+};
+
+void create_string(struct string *string, size_t initial_capacity);
+
+void delete_string(struct string *string);
+
+void reset_string(struct string *string);
+
+void append(struct string *string, const char *elements, size_t elements_size);
+
+void delete(struct string *string, size_t num_elements);
 
 #endif //TLS_COMMON_H
