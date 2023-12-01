@@ -5,7 +5,10 @@
 #include <server.h>
 #include "common.h"
 
-const char *message = "Hello World, My name is Theo Lincke";
+static char server_buffer[SERVER_BUFFER_SIZE];
+
+const char *server_hello = "Hello from the server";
+const char *server_finished = "Server finished";
 
 enum server_tls_result server_tls_exchange(
         int server_socket,
@@ -15,6 +18,31 @@ enum server_tls_result server_tls_exchange(
         size_t sk_len
 ) {
     int clientfd = accept_impl(server_socket);
-    send_in_chunks(clientfd, SEND_CHUNK_SIZE, message);
+
+    /**
+     * Receive Client Hello
+     */
+    recv_in_chunks(clientfd, server_buffer, SERVER_BUFFER_SIZE);
+
+    /**
+     * Send Server Hello
+     */
+    send_in_chunks(clientfd, SERVER_BUFFER_SIZE, server_hello);
+
+    /**
+     * Receive Premaster Secret
+     */
+    recv_in_chunks(clientfd, server_buffer, SERVER_BUFFER_SIZE);
+
+    /**
+     * Send Server Finished
+     */
+    send_in_chunks(clientfd, SERVER_BUFFER_SIZE, server_finished);
+
+    /**
+     * Receive Client Finished
+     */
+    recv_in_chunks(clientfd, server_buffer, SERVER_BUFFER_SIZE);
+
     return tls_server_success;
 }
