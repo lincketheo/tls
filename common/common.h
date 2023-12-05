@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+/////// Defines
 #define SERVER_PORT 8000
 
 enum verbosity {

@@ -5,7 +5,11 @@ set(CMAKE_C_STANDARD 11)
 
 include_directories(client common server ca)
 
-add_library(libcommon common/common.c)
+add_library(libcommon common/common.c
+        common/tls_main.h
+        common/tls_main.c
+        common/tls_extensions.h
+        common/tls_common.h)
 add_library(libclient client/client.c)
 add_library(libserver server/server.c)
 

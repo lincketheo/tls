@@ -279,7 +279,7 @@ void reset_string(struct string *string) {
 
 void increase_array_size(struct string *array) {
     size_t new_capacity;
-    if(array->capacity == 0){
+    if (array->capacity == 0) {
         new_capacity = 1;
     } else {
         new_capacity = array->capacity * 2;
@@ -318,3 +318,5 @@ void delete_string(struct string *string, size_t num_elements) {
     string->size -= num_elements;
     string->head[string->size] = '\0';
 }
+
+
