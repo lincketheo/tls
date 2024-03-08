@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #define SERVER_PORT 8000
+#define CA_PORT     8080
 
 enum verbosity {
     v_none = 0,
@@ -32,6 +33,10 @@ void reset_string(struct string *string);
 void append_string(struct string *string, const char *elements, size_t elements_size);
 
 void delete_string(struct string *string, size_t num_elements);
+
+void new_random_string(struct string *string, size_t num_elements);
+
+void copy_string(const struct string* from, struct string* to);
 
 void app_exit(int status);
 

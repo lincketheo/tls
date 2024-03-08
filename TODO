@@ -1,0 +1,4 @@
+- [ ] Add port in command line argument
+- [ ] Read in public key from shared file btwn server and client
+- [ ] Read in private key privately from server
+- [ ] Read in private key privately from client

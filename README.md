@@ -12,6 +12,11 @@ In one terminal:
 $ ./server
 ```
 
+In another terminal:
+```
+$ ./ca
+```
+
 In a different terminal:
 ```
 $ ./client

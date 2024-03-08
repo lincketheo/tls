@@ -24,11 +24,7 @@ enum server_tls_result {
  * @return TLS Status
  */
 enum server_tls_result server_tls_exchange(
-        int server_socket,
-        const char *sr,
-        size_t sr_len,
-        char *sk,
-        size_t sk_len
+        int clientfd
 );
 
 #endif //TLS_SERVER_H

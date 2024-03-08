@@ -19,11 +19,15 @@ static void (*app_exit_callbacks[MAX_CALLBACKS])() = {NULL};
 void app_exit(int status) {
     for (int i = 0; i < exit_callbacks_size; ++i) {
         if (app_exit_callbacks[i] != NULL) {
-            printf("Executing callback %d\n", i);
+            if (get_verbosity() > v_medium) {
+                printf("Executing callback %d\n", i);
+            }
             (*app_exit_callbacks[i])();
         }
     }
-    printf("Exiting\n");
+    if (get_verbosity() > v_medium) {
+        printf("Exiting\n");
+    }
     exit(status);
 }
 
@@ -36,7 +40,7 @@ void register_app_exit(void(*on_exit)()) {
 }
 
 int open_stream_socket_impl() {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Opening a stream socket\n");
     }
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -44,14 +48,14 @@ int open_stream_socket_impl() {
         printf("Error opening socket\n");
         app_exit(1);
     }
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Stream socket successfully opened\n");
     }
     return sockfd;
 }
 
 struct sockaddr_in create_internet_addr_any(int port) {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Creating socket address in internet namespace on port %d\n", port);
     }
     struct sockaddr_in server_addr;
@@ -62,7 +66,7 @@ struct sockaddr_in create_internet_addr_any(int port) {
 }
 
 void bind_impl(int sockfd, struct sockaddr_in *to_address) {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Binding to socket address\n");
     }
     int status = bind(sockfd, (struct sockaddr *) to_address, sizeof(struct sockaddr_in));
@@ -70,13 +74,13 @@ void bind_impl(int sockfd, struct sockaddr_in *to_address) {
         printf("Error binding\n");
         app_exit(1);
     }
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Bind Success\n");
     }
 }
 
 void listen_impl(int sockfd) {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Listening on socket %d\n", sockfd);
     }
     int status = listen(sockfd, 1);
@@ -84,13 +88,13 @@ void listen_impl(int sockfd) {
         printf("Error listening\n");
         app_exit(1);
     }
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Listen Success\n");
     }
 }
 
 int accept_impl(int sockfd) {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Accepting Client connection on socket %d\n", sockfd);
     }
     int client = accept(sockfd, NULL, NULL);
@@ -98,14 +102,14 @@ int accept_impl(int sockfd) {
         printf("Error accepting\n");
         app_exit(1);
     }
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Accept success\n");
     }
     return client;
 }
 
 void connect_impl(int sockfd, struct sockaddr_in *server_addr) {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Connecting to server address\n");
     }
     int status = connect(sockfd, (struct sockaddr *) server_addr, sizeof(struct sockaddr_in));
@@ -113,13 +117,13 @@ void connect_impl(int sockfd, struct sockaddr_in *server_addr) {
         printf("Error connecting\n");
         app_exit(1);
     }
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Connection success\n");
     }
 }
 
 size_t send_impl(int to_socket, const char *buffer, size_t buffer_size) {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Sending %zu bytes. Message: [%.*s]\n", buffer_size, (int) buffer_size, buffer);
     }
     ssize_t sent = send(to_socket, buffer, buffer_size, 0);
@@ -127,7 +131,7 @@ size_t send_impl(int to_socket, const char *buffer, size_t buffer_size) {
         printf("Error sending\n");
         app_exit(1);
     }
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Sent %zu bytes.\n", sent);
     }
     return (size_t) sent;
@@ -163,7 +167,7 @@ void send_in_chunks(
 }
 
 size_t recv_impl(int sockfd, char *buffer, size_t buffer_size) {
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Requesting %zu bytes\n", buffer_size);
     }
 
@@ -173,7 +177,7 @@ size_t recv_impl(int sockfd, char *buffer, size_t buffer_size) {
         app_exit(1);
     }
 
-    if (get_verbosity() > v_none) {
+    if (get_verbosity() > v_medium) {
         printf("Received %zu bytes. Message: [%.*s]\n", recvd, (int) recvd, buffer);
     }
 
@@ -239,7 +243,7 @@ size_t find_char_assert(const char *buffer, size_t buffer_size, char c) {
 }
 
 enum verbosity get_verbosity() {
-    return v_high;
+    return v_medium;
 }
 
 void array_exists_guard(struct string *array) {
@@ -264,7 +268,7 @@ void create_string(struct string *string, size_t initial_capacity) {
 void destroy_string(struct string *string) {
     if (string) {
         if (string->head) {
-            if (get_verbosity() > v_none) {
+            if (get_verbosity() > v_medium) {
                 printf("Destroying string\n");
             }
             free(string->head);
@@ -317,4 +321,19 @@ void delete_string(struct string *string, size_t num_elements) {
 
     string->size -= num_elements;
     string->head[string->size] = '\0';
+}
+
+void new_random_string(struct string *string, size_t num_elements) {
+    reset_string(string);
+    char *elem = malloc(num_elements * sizeof(char));
+    for (int i = 0; i < num_elements; ++i) {
+        elem[i] = (char) ((long) 'a' + (rand() % 26));
+    }
+    append_string(string, elem, num_elements);
+    free(elem);
+}
+
+void copy_string(const struct string *from, struct string *to) {
+    reset_string(to);
+    append_string(to, from->head, from->size);
 }
