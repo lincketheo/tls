@@ -24,6 +24,24 @@ struct string {
     size_t capacity;
 };
 
+struct simple_json {
+    char *key;
+    char *data;
+    size_t key_size;
+    size_t data_size;
+    struct simple_json *next;
+};
+
+char *parse_only_config_name(int argc, char **argv);
+
+void srand_from_json(struct simple_json *json, long dflt);
+
+size_t get_json_value(struct simple_json *json, char *dest, size_t destl, char *key, size_t keyl);
+
+struct simple_json *parse_simple_json(char *filename);
+
+void free_simple_json(struct simple_json *json);
+
 void create_string(struct string *string, size_t initial_capacity);
 
 void destroy_string(struct string *string);
@@ -36,7 +54,7 @@ void delete_string(struct string *string, size_t num_elements);
 
 void new_random_string(struct string *string, size_t num_elements);
 
-void copy_string(const struct string* from, struct string* to);
+void copy_string(const struct string *from, struct string *to);
 
 void app_exit(int status);
 

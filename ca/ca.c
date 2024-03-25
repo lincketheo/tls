@@ -4,6 +4,7 @@
 
 #include <ca.h>
 #include <common.h>
+#include <string.h>
 
 static char client_buffer[CA_BUFFER_SIZE];
 static struct string ca_send_string;
@@ -60,7 +61,24 @@ void ca_recv(int fd, const char *prefix) {
     }
 }
 
-void ca_tls_exchange(int clientfd) {
+void verify_pub_key(
+        char *pbk_recv,
+        size_t pbk_recv_l,
+        char *pbk_exp,
+        size_t pbk_exp_l
+) {
+    if (pbk_recv_l != pbk_exp_l || !strncmp(pbk_recv, pbk_exp, pbk_exp_l)) {
+        printf("Invalid public key. Got: %.*s. Expected: %.*s\n", (int) pbk_recv_l, pbk_recv, (int) pbk_exp_l, pbk_exp);
+    } else {
+        printf("Valid public key. Got: %.*s. Expected: %.*s\n", (int) pbk_recv_l, pbk_recv, (int) pbk_exp_l, pbk_exp);
+    }
+}
+
+void ca_tls_exchange(
+        int clientfd,
+        char *pbk,
+        size_t pbk_l
+) {
     init_strings();
 
     /**
@@ -68,6 +86,8 @@ void ca_tls_exchange(int clientfd) {
      */
     ca_recv(clientfd, "Server Public Key:");
     copy_string(&ca_recv_string, &server_public_key);
+
+    verify_pub_key(server_public_key.head, server_public_key.size, pbk, pbk_l);
 
     /**
      * Send success

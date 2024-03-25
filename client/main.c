@@ -11,7 +11,7 @@
 static int server_sockfd = -1;
 static int ca_sockfd = -1;
 
-void clean_up_sockets() {
+void clean_up() {
     if (server_sockfd > 0) {
         if (get_verbosity() > v_medium) {
             printf("Closing server socket\n");
@@ -30,7 +30,7 @@ int main() {
     srand(1);
 
     // Register this callback on app exit
-    register_app_exit(clean_up_sockets);
+    register_app_exit(clean_up);
 
     // Create socket
     server_sockfd = open_stream_socket_impl();

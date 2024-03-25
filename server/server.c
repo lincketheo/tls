@@ -80,7 +80,13 @@ void server_recv(int fd, const char *prefix) {
     }
 }
 
-enum server_tls_result server_tls_exchange(int clientfd) {
+enum server_tls_result server_tls_exchange(
+        int clientfd,
+        char *pbk,
+        size_t pbk_l,
+        char *pvk,
+        size_t pvk_l
+) {
     init_strings();
 
     /**
@@ -99,8 +105,8 @@ enum server_tls_result server_tls_exchange(int clientfd) {
     /**
      * Send Server Public Key
      */
-    new_random_string(&server_public_key, 10);
-    copy_string(&server_public_key, &server_send_string);
+    reset_string(&server_send_string);
+    append_string(&server_send_string, pbk, pbk_l);
     server_send(clientfd, "Server Public Key");
 
     /**

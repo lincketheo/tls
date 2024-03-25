@@ -14,17 +14,12 @@ enum server_tls_result {
     tls_server_failure,
 };
 
-/**
- * Initiate Server tls exchange
- * @param server_socket The server socket set up and listening
- * @param sr - Server random
- * @param sr_len - Server random length
- * @param sk - Session key
- * @param sk_len - Session key length
- * @return TLS Status
- */
 enum server_tls_result server_tls_exchange(
-        int clientfd
+        int clientfd,
+        char *pbk,
+        size_t pbk_l,
+        char *pvk,
+        size_t pvk_l
 );
 
 #endif //TLS_SERVER_H

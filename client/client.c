@@ -86,9 +86,7 @@ enum client_tls_result client_tls_exchange(
         int client_server_socket,
         int client_ca_socket
 ) {
-    printf("here\n");
     init_strings();
-    printf("there\n");
 
     /**
      * Send Client Hello
