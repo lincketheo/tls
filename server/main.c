@@ -1,7 +1,11 @@
 #include <netinet/in.h>
-#include <common.h>
 #include <unistd.h>
-#include "server.h"
+#include <sockets.h>
+#include <dynamic_string.h>
+#include <app.h>
+#include <stdio.h>
+#include <json.h>
+#include <server.h>
 
 static int sockfd = -1;
 static int clientfd = -1;

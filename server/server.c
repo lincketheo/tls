@@ -3,12 +3,21 @@
 //
 
 #include <server.h>
-#include <common.h>
+#include <dynamic_string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <app.h>
+#include <utils.h>
+#include <sockets.h>
 
+// Internal Receive Buffer
 static char server_buffer[SERVER_BUFFER_SIZE];
+
+// String used to send / recieve data
 static struct string server_send_string;
 static struct string server_recv_string;
 
+// Keep track of these values
 static struct string client_random;
 static struct string premaster;
 static struct string server_random;

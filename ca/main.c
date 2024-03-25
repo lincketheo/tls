@@ -4,10 +4,12 @@
 
 #include <netinet/in.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <getopt.h>
-#include "common.h"
-#include "ca.h"
+#include <ca.h>
+#include <dynamic_string.h>
+#include <app.h>
+#include <stdio.h>
+#include <json.h>
+#include <sockets.h>
 
 static int sockfd = -1;
 static int clientfd = -1;

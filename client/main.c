@@ -3,10 +3,11 @@
 //
 
 #include <netinet/in.h>
-#include <common.h>
+#include <client.h>
+#include <app.h>
+#include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include "client.h"
+#include <sockets.h>
 
 static int server_sockfd = -1;
 static int ca_sockfd = -1;

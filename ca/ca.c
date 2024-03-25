@@ -3,8 +3,13 @@
 //
 
 #include <ca.h>
-#include <common.h>
 #include <string.h>
+#include <dynamic_string.h>
+#include <app.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <utils.h>
+#include <sockets.h>
 
 static char client_buffer[CA_BUFFER_SIZE];
 static struct string ca_send_string;
@@ -67,7 +72,7 @@ void verify_pub_key(
         char *pbk_exp,
         size_t pbk_exp_l
 ) {
-    if (pbk_recv_l != pbk_exp_l || !strncmp(pbk_recv, pbk_exp, pbk_exp_l)) {
+    if (pbk_recv_l != pbk_exp_l || strncmp(pbk_recv, pbk_exp, pbk_exp_l) != 0) {
         printf("Invalid public key. Got: %.*s. Expected: %.*s\n", (int) pbk_recv_l, pbk_recv, (int) pbk_exp_l, pbk_exp);
     } else {
         printf("Valid public key. Got: %.*s. Expected: %.*s\n", (int) pbk_recv_l, pbk_recv, (int) pbk_exp_l, pbk_exp);

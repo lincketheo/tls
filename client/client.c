@@ -3,8 +3,14 @@
 //
 
 #include <client.h>
-#include "common.h"
+#include <dynamic_string.h>
+#include <stdio.h>
+#include <app.h>
+#include <stdbool.h>
+#include <sockets.h>
+#include <utils.h>
 
+#define CLIENT_BUFFER_SIZE 20
 static char client_buffer[CLIENT_BUFFER_SIZE];
 
 // Just creating one global string to make free's and everything easier (for app exit callbacks)
