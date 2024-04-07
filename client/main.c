@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sockets.h>
+#include "rsa.h"
 
 static int server_sockfd = -1;
 static int ca_sockfd = -1;
@@ -28,7 +29,12 @@ void clean_up() {
 }
 
 int main() {
-    srand(1);
+    srand(9);
+
+    uint32_t p1, p2;
+    two_random_large_primes(&p1, &p2);
+    printf("%zu %zu\n", p1, p2);
+    exit(1);
 
     // Register this callback on app exit
     register_app_exit(clean_up);

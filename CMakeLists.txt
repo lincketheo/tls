@@ -8,11 +8,8 @@ include_directories(client common server ca)
 
 add_library(libcommon
         common/app.c
-        common/dynamic_string.c
-        common/json.c
         common/sockets.c
         common/utils.c
-        common/dynamic_string.c
 )
 
 add_library(libca ca/ca.c)
@@ -31,3 +28,6 @@ target_link_libraries(client libclient)
 
 add_executable(ca ca/main.c)
 target_link_libraries(ca libca)
+
+add_executable(test test.c)
+target_link_libraries(test libcommon)
